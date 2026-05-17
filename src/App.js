@@ -211,11 +211,19 @@ export default function App() {
   async function cadastrar() {
     setErro("");
     try {
+      const snap = await getDoc(doc(db, "autorizados", "emails"));
+      if (!snap.exists()) { setErro("Acesso nao autorizado. Entre em contato para adquirir o acesso."); return; }
+      const lista = snap.data().lista || [];
+      if (!lista.includes(email.toLowerCase().trim())) {
+        setErro("Acesso nao autorizado. Entre em contato para adquirir o acesso.");
+        return;
+      }
       await createUserWithEmailAndPassword(auth, email, senha);
     } catch(e) {
       if (e.code === "auth/email-already-in-use") setErro("E-mail ja cadastrado.");
       else if (e.code === "auth/weak-password") setErro("Senha fraca. Use pelo menos 6 caracteres.");
       else if (e.code === "auth/invalid-email") setErro("E-mail invalido.");
+      else if (!e.code) setErro(e.message);
       else setErro("Erro ao cadastrar. Tente novamente.");
     }
   }
